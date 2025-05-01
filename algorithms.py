@@ -77,15 +77,36 @@ def calc_shortest_path(graph: Graph, start: str, end: str) -> str:
 
 
 def calc_pagerank(graph: Graph, iterations: int = 100, d: float = 0.85) -> Dict[str, float]:
-    """计算PageRank值"""
+    """计算PageRank值（修正出度为0的节点PR值均分逻辑）"""
     nodes = list(graph.get_nodes())
-    pr = {node: 1.0 / len(nodes) for node in nodes}
+    N = len(nodes)
+    if N == 0:
+        return {}
+
+    # 初始化PR值为均分
+    pr = {node: 1.0 / N for node in nodes}
+
     for _ in range(iterations):
         new_pr = {}
+        # 1. 找出所有出度为0的节点及其PR值总和
+        zero_outdegree_nodes = [u for u in nodes if len(graph.adjacency_list[u]) == 0]
+        total_zero_pr = sum(pr[u] for u in zero_outdegree_nodes)
+
+        # 2. 计算每个非零出度节点应分配的额外PR值
+        distributed_pr = total_zero_pr / (N - 1) if N > 1 else 0
+
+        # 3. 计算每个节点的新PR值
         for node in nodes:
+            # 3.1 正常入链贡献
             incoming = [u for u in graph.adjacency_list if node in graph.adjacency_list[u]]
-            new_pr[node] = (1 - d) / len(nodes) + d * sum(
-                pr[u] / len(graph.adjacency_list[u]) for u in incoming
-            )
+            incoming_contribution = sum(pr[u] / len(graph.adjacency_list[u]) for u in incoming)
+
+            # 3.2 来自出度为0节点的额外分配（当前节点不是出度为0的节点时才分配）
+            additional_pr = distributed_pr if node not in zero_outdegree_nodes else 0
+
+            # 3.3 更新PR值
+            new_pr[node] = (1 - d) / N + d * (incoming_contribution + additional_pr)
+
         pr = new_pr
+
     return pr
