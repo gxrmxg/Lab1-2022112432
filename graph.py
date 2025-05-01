@@ -33,7 +33,3 @@ class Graph:
         return set(self.adjacency_list.keys())
 
 
-
-
-
-"Modification in B1" 
