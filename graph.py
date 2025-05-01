@@ -30,4 +30,4 @@ class Graph:
 
     def get_nodes(self) -> set:
         """返回所有节点"""
-        return set(self.adjacency_list.keys())
+        return set(self.adjacency_list.keys())"Modification in B1" 
