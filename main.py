@@ -1,6 +1,12 @@
 from text_processor import process_text
 from graph import Graph
-from algorithms import query_bridge_words, generate_new_text, calc_shortest_path, calc_pagerank
+from algorithms import (
+    query_bridge_words,
+    generate_new_text,
+    calc_shortest_path,
+    calc_pagerank,
+    random_walk
+)
 from utils import input_file_path, validate_word
 import sys
 
@@ -24,8 +30,9 @@ def main():
         print("3. Generate new text")
         print("4. Calculate shortest path")
         print("5. Calculate PageRank")
-        print("6. Exit")
-        choice = input("Enter your choice (1-6): ").strip()
+        print("6. Random Walk")
+        print("7. Exit")
+        choice = input("Enter your choice (1-7): ").strip()
 
         if choice == '1':
             print("\nDirected Graph:")
@@ -52,12 +59,24 @@ def main():
             print(calc_shortest_path(graph, start, end))
 
         elif choice == '5':
-            pr = calc_pagerank(graph)
-            print("\nPageRank Scores:")
-            for node, score in sorted(pr.items(), key=lambda x: -x[1]):
-                print(f"{node}: {score:.4f}")
+            try:
+                word_freq = graph.get_word_freq()
+                pr = calc_pagerank(graph, word_freq)
+                print("\nPageRank Scores:")
+                for node, score in sorted(pr.items(), key=lambda x: -x[1]):
+                    print(f"{node}: {score:.4f}")
+            except Exception as e:
+                print(f"Error calculating PageRank: {e}")
 
         elif choice == '6':
+            start = input("Enter start word (or press Enter to choose randomly): ").strip()
+            if start and not validate_word(graph, start):
+                print("Invalid start word. It does not exist in the graph.")
+                continue
+            path = random_walk(graph, start_word=start if start else None)
+            print(" -> ".join(path))
+
+        elif choice == '7':
             print("Exiting...")
             break
 
@@ -67,7 +86,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
-
-
