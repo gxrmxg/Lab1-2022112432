@@ -9,7 +9,7 @@ def test_same_node():
 
 def test_multiple_paths():
     g = Graph()
-    g.add_edge("A", "B", weight=1)  # 显式指定参数名
+    g.add_edge("A", "B", weight=1)
     g.add_edge("A", "C", weight=5)
     g.add_edge("B", "C", weight=1)
     result = calc_shortest_path(g, "A", "C")
