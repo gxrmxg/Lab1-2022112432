@@ -3,6 +3,7 @@ import re
 import random
 from graph import Graph
 from typing import Dict, List
+from collections import defaultdict
 
 
 def query_bridge_words(graph: Graph, word1: str, word2: str) -> str:
@@ -76,37 +77,58 @@ def calc_shortest_path(graph: Graph, start: str, end: str) -> str:
     return f"Shortest path: {' -> '.join(path)}, length: {distances[end]}"
 
 
-def calc_pagerank(graph: Graph, iterations: int = 100, d: float = 0.85) -> Dict[str, float]:
-    """计算PageRank值（修正出度为0的节点PR值均分逻辑）"""
-    nodes = list(graph.get_nodes())
-    N = len(nodes)
+
+def calc_pagerank(graph: Graph, word_freq: Dict[str, int],
+                  d: float = 0.85, tol: float = 1e-6, max_iter: int = 100) -> Dict[str, float]:
+    if d is None:
+        d = 0.85  # 默认阻尼系数
+
+    all_nodes = list(graph.get_nodes())
+    N = len(all_nodes)
     if N == 0:
         return {}
 
-    # 初始化PR值为均分
-    pr = {node: 1.0 / N for node in nodes}
+    pr = {node: 1.0 / N for node in all_nodes}
 
-    for _ in range(iterations):
-        new_pr = {}
-        # 1. 找出所有出度为0的节点及其PR值总和
-        zero_outdegree_nodes = [u for u in nodes if len(graph.adjacency_list[u]) == 0]
-        total_zero_pr = sum(pr[u] for u in zero_outdegree_nodes)
+    for _ in range(max_iter):
+        new_pr = {node: (1 - d) / N for node in all_nodes}
+        for u in all_nodes:
+            out_nodes = graph.adjacency_list.get(u, {})
+            if len(out_nodes) == 0:
+                continue
+            share = pr[u] / len(out_nodes)
+            for v in out_nodes:
+                new_pr[v] += d * share
 
-        # 2. 计算每个非零出度节点应分配的额外PR值
-        distributed_pr = total_zero_pr / (N - 1) if N > 1 else 0
+        total = sum(new_pr.values())
+        for node in new_pr:
+            new_pr[node] /= total
 
-        # 3. 计算每个节点的新PR值
-        for node in nodes:
-            # 3.1 正常入链贡献
-            incoming = [u for u in graph.adjacency_list if node in graph.adjacency_list[u]]
-            incoming_contribution = sum(pr[u] / len(graph.adjacency_list[u]) for u in incoming)
-
-            # 3.2 来自出度为0节点的额外分配（当前节点不是出度为0的节点时才分配）
-            additional_pr = distributed_pr if node not in zero_outdegree_nodes else 0
-
-            # 3.3 更新PR值
-            new_pr[node] = (1 - d) / N + d * (incoming_contribution + additional_pr)
-
+        diff = sum(abs(new_pr[node] - pr[node]) for node in all_nodes)
         pr = new_pr
+        if diff < tol:
+            break
 
     return pr
+0
+
+
+
+def random_walk(graph, start_word=None, max_steps=20):
+    import random
+
+    if not graph.adjacency_list:
+        return []
+
+    current = start_word if start_word else random.choice(list(graph.adjacency_list.keys()))
+    path = [current]
+
+    for _ in range(max_steps):
+        neighbors = list(graph.adjacency_list.get(current, {}).keys())
+        if not neighbors:
+            break
+        current = random.choice(neighbors)
+        path.append(current)
+
+    return path
+
