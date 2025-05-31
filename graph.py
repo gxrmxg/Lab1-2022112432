@@ -7,13 +7,13 @@ class Graph:
         self.adjacency_list = defaultdict(lambda: defaultdict(int))  # 格式: {u: {v: weight}}
         self.word_freq = defaultdict(int)  # 词频统计
 
-    def add_edge(self, u: str, v: str) -> None:
-        """添加边并更新权重（相邻出现次数）"""
+    def add_edge(self, u: str, v: str, weight: int = 1) -> None:
+        """添加边并更新权重（可自定义权重）"""
         u = u.lower()
         v = v.lower()
-        self.adjacency_list[u][v] += 1
-        self.word_freq[u] += 1  # 对起点词统计频率
-        self.word_freq[v] += 1  # 可选：也对终点词统计频率（视你想如何定义词频）
+        self.adjacency_list[u][v] += weight  # 累加权重（或直接赋值，根据需求选择）
+        self.word_freq[u] += weight  # 根据权重更新词频
+        self.word_freq[v] += weight  # 可选：根据需求决定是否更新终点词频
 
     def build_from_words(self, words: list) -> None:
         """从单词列表构建图"""
